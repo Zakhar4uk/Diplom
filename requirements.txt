@@ -1,3 +1,5 @@
+# Vision dependencies
+
 absl-py==2.1.0
 accelerate==0.29.2
 apturl==0.5.2
