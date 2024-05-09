@@ -21,6 +21,10 @@ model.agnostic = False  # NMS class-agnostic
 model.multi_label = False  # NMS multiple labels per box
 model.max_det = 1000  # maximum number of detections per image
 
+
+text_processor = TrOCRProcessor.from_pretrained('microsoft/trocr-base-stage1')
+text_model = VisionEncoderDecoderModel.from_pretrained('microsoft/trocr-base-stage1')
+
 def get_license_plates(image_path: str) -> dict:
     # set image
     # img = 
@@ -31,12 +35,10 @@ def get_license_plates(image_path: str) -> dict:
 def get_characters(image: Image) -> str:
     plate = image
 
-    processor = TrOCRProcessor.from_pretrained('microsoft/trocr-base-stage1')
-    model = VisionEncoderDecoderModel.from_pretrained('microsoft/trocr-base-stage1')
-    pixel_values = processor(images=plate, return_tensors="pt").pixel_values
+    pixel_values = text_processor(images=plate, return_tensors="pt").pixel_values
 
-    generated_ids = model.generate(pixel_values)
-    generated_text = processor.batch_decode(generated_ids, skip_special_tokens=True)
+    generated_ids = text_model.generate(pixel_values)
+    generated_text = text_processor.batch_decode(generated_ids, skip_special_tokens=True)
     return generated_text
 
 
