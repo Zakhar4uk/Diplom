@@ -16,15 +16,6 @@ source = '/home/marat/Videos/2.mp4'
 dest = '/home/marat/Videos/overley_2.2.paddle.mp4'
 
 
-""" 
-нам осталось:
-1) сделать так, чтобы на видео алгоритм не пытался предугадать номер, если он не уверен
-чтобы не было строк #####. Также, если это легко, то можешь в читаемый вариант написать текста 
-2) в фото фиксации дополнить параметры тачки (самые базовые: цвет, модель( скорая, полиция, обычная, грузовая, мотоцикл,)  марка)
-это набор, который ты сам решаешь, какой взять. Мне не принципиально. Что легче, то лучше
-3) если получиться, то можно и на видео тоже дополнить информацию. Опять же, если это не сложно
-4) когда будем женитьбу устраивать, то мб надо будет списаться. А то мало ли там скрипты какие-то дописать надо
-"""
 
 def draw_text(img, text,
           font=cv2.FONT_HERSHEY_PLAIN,
@@ -81,8 +72,6 @@ with iio.imopen(dest, "w", plugin="pyav") as out_file:
             else:
                 gosnomer = ''
 
-            # gosnomer = get_characters(frame_image.crop((int(x1), int(y1), int(x2), int(y2))))[0]
-
             gosnomer = gosnomer.replace(' ', '').upper()
 
             print(gosnomer)
@@ -101,23 +90,6 @@ with iio.imopen(dest, "w", plugin="pyav") as out_file:
                     text_color=(0, 0, 0),
                     text_color_bg=(255, 255, 255)
                     )
-                # cv2.putText(
-                #     img,
-                #     text=gosnomer,
-                #     fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                #     org=(int(x1)-20, int(y1)-5),
-                #     fontScale=0.5,
-                #     color=(0, 0, 0),
-                #     thickness=2,
-                # )
             frame_image = Image.fromarray(img)
-            # draw.text(
-            #         xy=(20, 20), 
-            #         text=get_characters(frame_image.crop((int(x1), int(y1), int(x2), int(y2)))),
-            #         fill=(255, 0, 0),
-            #         font=ImageFont.load_default()
-            #         )
-            # frame_image.show()
-            # input()
             
         out_file.write_frame(np.array(frame_image))
