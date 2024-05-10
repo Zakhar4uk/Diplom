@@ -4,11 +4,17 @@ from licenseplates import get_license_plates, model, get_characters
 from PIL import Image, ImageDraw, ImageFont
 import cv2
 
+from ultralytics import YOLO
+from paddleocr import PaddleOCR
+
+ocr = PaddleOCR(use_angle_cls=True, lang='en')
+
 import re
 
 
-source = '/home/marat/Videos/На Машине по Санкт-Петербургу 4K.mp4'
-dest = '/home/marat/Videos/overley_2.2.mp4'
+source = '/home/marat/Videos/2.mp4'
+dest = '/home/marat/Videos/overley_2.2.paddle.mp4'
+
 
 """ 
 нам осталось:
@@ -38,7 +44,7 @@ def draw_text(img, text,
     return text_size
 
 def is_gosnomer(nomer: str) -> bool:
-    return re.search('([АВЕКМНОРСТУХавекмнорстухABEKMHOPCTYXabekmhopctyx]\s*\d{3}\s*[АВЕКМНОРСТУХавекмнорстухABEKMHOPCTYXabekmhopctyx]{2}\s*\d{2,3})|([АВЕКМНОРСТУХавекмнорстухABEKMHOPCTYXabekmhopctyx]{2}\s*\d{3}\s*\d{2,3})', nomer) != None
+    return re.search('([АВЕКМНОРСТУХавекмнорстухABEKMHOPCTYXabekmhopctyx]\s*\d{3}\s*[АВЕКМНОРСТУХавекмнорстухABEKMHOPCTYXabekmhopctyx]{2}\s*\d{2,3})|([АВЕКМНОРСТУХавекмнорстухABEKMHOPCTYXabekmhopctyx]{2}\s*\d{3}\s*\d{2,3})', nomer)
 
 
 fps = iio.immeta(source, plugin="pyav")["fps"]
@@ -48,8 +54,18 @@ with iio.imopen(dest, "w", plugin="pyav") as out_file:
 
 
     for frame in iio.imiter(source, plugin="pyav"):
+
         frame_image = Image.fromarray(frame)
         draw = ImageDraw.Draw(frame_image)
+        
+        objects_model = YOLO('yolov8n.pt')  # pretrained YOLOv8n model
+
+        # Run batched inference on a list of images
+        results = objects_model(frame_image)[0]  # return a list of Results objects
+
+        frame_image = Image.fromarray(results.plot()[:, :, ::-1])
+
+
         frame_res = model(frame)
         n, _ = frame_res.pred[0].shape
         for i in range(n):
@@ -58,13 +74,23 @@ with iio.imopen(dest, "w", plugin="pyav") as out_file:
             draw.rectangle((x1, y1, x2, y2), outline=(255, 10, 0), width=1)
             img = np.array(frame_image)
 
-            gosnomer = get_characters(frame_image.crop((int(x1), int(y1), int(x2), int(y2))))[0]
+            gosnomer = ocr.ocr(np.array(frame_image.crop((int(x1), int(y1), int(x2), int(y2)))), cls=True)
+
+            if gosnomer[0] is not None:
+                gosnomer = gosnomer[0][0][1][0]
+            else:
+                gosnomer = ''
+
+            # gosnomer = get_characters(frame_image.crop((int(x1), int(y1), int(x2), int(y2))))[0]
 
             gosnomer = gosnomer.replace(' ', '').upper()
 
             print(gosnomer)
 
-            if is_gosnomer(gosnomer):
+            gosnomer = is_gosnomer(gosnomer)
+
+            if gosnomer != None:
+                gosnomer = gosnomer.string
                 draw_text(
                     img,
                     text=gosnomer,
