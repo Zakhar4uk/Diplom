@@ -7,8 +7,8 @@ import cv2
 import re
 
 
-source = '/home/marat/Videos/2.mp4'
-dest = '/home/marat/Videos/overley_2.1.mp4'
+source = '/home/marat/Videos/На Машине по Санкт-Петербургу 4K.mp4'
+dest = '/home/marat/Videos/overley_2.2.mp4'
 
 """ 
 нам осталось:
@@ -32,7 +32,7 @@ def draw_text(img, text,
     x, y = pos
     text_size, _ = cv2.getTextSize(text, font, font_scale, font_thickness)
     text_w, text_h = text_size
-    cv2.rectangle(img, pos, (x + text_w, y + text_h), text_color_bg, -1)
+    cv2.rectangle(img, (x -5, y - 5), (x + text_w + 5, y + text_h + 5), text_color_bg, -1)
     cv2.putText(img, text, (int(x), int(y + text_h + font_scale - 1)), font, font_scale, text_color, font_thickness)
 
     return text_size
@@ -60,7 +60,7 @@ with iio.imopen(dest, "w", plugin="pyav") as out_file:
 
             gosnomer = get_characters(frame_image.crop((int(x1), int(y1), int(x2), int(y2))))[0]
 
-            gosnomer = gosnomer.replace(' ', '').lower()
+            gosnomer = gosnomer.replace(' ', '').upper()
 
             print(gosnomer)
 
@@ -68,12 +68,12 @@ with iio.imopen(dest, "w", plugin="pyav") as out_file:
                 draw_text(
                     img,
                     text=gosnomer,
-                    font=cv2.FONT_HERSHEY_SCRIPT_COMPLEX,
-                    pos=(int(x1)-20, int(y1)-5),
+                    font=cv2.FONT_HERSHEY_SIMPLEX,
+                    pos=(int(x1)-20, int(y1)-30),
                     font_scale=0.5,
-                    font_thickness=2,
+                    font_thickness=1,
                     text_color=(0, 0, 0),
-                    text_color_bg=(200, 200, 200)
+                    text_color_bg=(255, 255, 255)
                     )
                 # cv2.putText(
                 #     img,
