@@ -1,7 +1,7 @@
 import numpy as np
 import imageio.v3 as iio
-from licenseplates import get_license_plates, model, get_characters
-from PIL import Image, ImageDraw, ImageFont
+from licenseplates import model
+from PIL import Image, ImageDraw
 import cv2
 
 from ultralytics import YOLO
@@ -12,10 +12,110 @@ ocr = PaddleOCR(use_angle_cls=True, lang='en')
 import re
 
 
-source = '/home/marat/Videos/2.mp4'
-dest = '/home/marat/Videos/overley_2.2.paddle.mp4'
+source = '/home/marat/Videos/На Машине по Санкт-Петербургу 4K.mp4'
+dest = '/home/marat/Videos/overley_yolo_paddle.mp4'
+
+def annotate_image(source, dest):
+    frame_image = Image.open(source)
+    draw = ImageDraw.Draw(frame_image)
+    
+    objects_model = YOLO('yolov8n.pt')  # pretrained YOLOv8n model
+
+    # Run batched inference on a list of images
+    results = objects_model(frame_image)[0]  # return a list of Results objects
+
+    frame_image = Image.fromarray(results.plot()[:, :, ::-1])
 
 
+    frame_res = model(frame_image)
+    n, _ = frame_res.pred[0].shape
+    for i in range(n):
+        # if len(i) > 0:
+        x1, y1, x2, y2 = frame_res.pred[0][i, :4]
+        draw.rectangle((x1, y1, x2, y2), outline=(255, 10, 0), width=1)
+        img = np.array(frame_image)
+
+        gosnomer = ocr.ocr(np.array(frame_image.crop((int(x1), int(y1), int(x2), int(y2)))), cls=True)
+
+        if gosnomer[0] is not None:
+            gosnomer = gosnomer[0][0][1][0]
+        else:
+            gosnomer = ''
+
+        gosnomer = gosnomer.replace(' ', '').upper()
+
+        gosnomer = is_gosnomer(gosnomer)
+
+        if gosnomer != None:
+            gosnomer = gosnomer.string
+            draw_text(
+                img,
+                text=gosnomer,
+                font=cv2.FONT_HERSHEY_SIMPLEX,
+                pos=(int(x1)-20, int(y1)-30),
+                font_scale=0.5,
+                font_thickness=1,
+                text_color=(0, 0, 0),
+                text_color_bg=(255, 255, 255)
+                )
+    Image.fromarray(img).save(dest)
+
+def annotate_video(source, dest):
+    fps = iio.immeta(source, plugin="pyav")["fps"]
+
+    with iio.imopen(dest, "w", plugin="pyav") as out_file:
+        out_file.init_video_stream(codec='vp9', fps=fps)
+
+
+        for frame in iio.imiter(source, plugin="pyav"):
+
+            frame_image = Image.fromarray(frame)
+            draw = ImageDraw.Draw(frame_image)
+            
+            objects_model = YOLO('yolov8n.pt')  # pretrained YOLOv8n model
+
+            # Run batched inference on a list of images
+            results = objects_model(frame_image)[0]  # return a list of Results objects
+
+            frame_image = Image.fromarray(results.plot()[:, :, ::-1])
+
+
+            frame_res = model(frame)
+            n, _ = frame_res.pred[0].shape
+            for i in range(n):
+                # if len(i) > 0:
+                x1, y1, x2, y2 = frame_res.pred[0][i, :4]
+                draw.rectangle((x1, y1, x2, y2), outline=(255, 10, 0), width=1)
+                img = np.array(frame_image)
+
+                gosnomer = ocr.ocr(np.array(frame_image.crop((int(x1), int(y1), int(x2), int(y2)))), cls=True)
+
+                if gosnomer[0] is not None:
+                    gosnomer = gosnomer[0][0][1][0]
+                else:
+                    gosnomer = ''
+
+                gosnomer = gosnomer.replace(' ', '').upper()
+
+                print(gosnomer)
+
+                gosnomer = is_gosnomer(gosnomer)
+
+                if gosnomer != None:
+                    gosnomer = gosnomer.string
+                    draw_text(
+                        img,
+                        text=gosnomer,
+                        font=cv2.FONT_HERSHEY_SIMPLEX,
+                        pos=(int(x1)-20, int(y1)-30),
+                        font_scale=0.5,
+                        font_thickness=1,
+                        text_color=(0, 0, 0),
+                        text_color_bg=(255, 255, 255)
+                        )
+                frame_image = Image.fromarray(img)
+                
+            out_file.write_frame(np.array(frame_image))
 
 def draw_text(img, text,
           font=cv2.FONT_HERSHEY_PLAIN,
@@ -36,60 +136,3 @@ def draw_text(img, text,
 
 def is_gosnomer(nomer: str) -> bool:
     return re.search('([АВЕКМНОРСТУХавекмнорстухABEKMHOPCTYXabekmhopctyx]\s*\d{3}\s*[АВЕКМНОРСТУХавекмнорстухABEKMHOPCTYXabekmhopctyx]{2}\s*\d{2,3})|([АВЕКМНОРСТУХавекмнорстухABEKMHOPCTYXabekmhopctyx]{2}\s*\d{3}\s*\d{2,3})', nomer)
-
-
-fps = iio.immeta(source, plugin="pyav")["fps"]
-
-with iio.imopen(dest, "w", plugin="pyav") as out_file:
-    out_file.init_video_stream(codec='vp9', fps=15)
-
-
-    for frame in iio.imiter(source, plugin="pyav"):
-
-        frame_image = Image.fromarray(frame)
-        draw = ImageDraw.Draw(frame_image)
-        
-        objects_model = YOLO('yolov8n.pt')  # pretrained YOLOv8n model
-
-        # Run batched inference on a list of images
-        results = objects_model(frame_image)[0]  # return a list of Results objects
-
-        frame_image = Image.fromarray(results.plot()[:, :, ::-1])
-
-
-        frame_res = model(frame)
-        n, _ = frame_res.pred[0].shape
-        for i in range(n):
-            # if len(i) > 0:
-            x1, y1, x2, y2 = frame_res.pred[0][i, :4]
-            draw.rectangle((x1, y1, x2, y2), outline=(255, 10, 0), width=1)
-            img = np.array(frame_image)
-
-            gosnomer = ocr.ocr(np.array(frame_image.crop((int(x1), int(y1), int(x2), int(y2)))), cls=True)
-
-            if gosnomer[0] is not None:
-                gosnomer = gosnomer[0][0][1][0]
-            else:
-                gosnomer = ''
-
-            gosnomer = gosnomer.replace(' ', '').upper()
-
-            print(gosnomer)
-
-            gosnomer = is_gosnomer(gosnomer)
-
-            if gosnomer != None:
-                gosnomer = gosnomer.string
-                draw_text(
-                    img,
-                    text=gosnomer,
-                    font=cv2.FONT_HERSHEY_SIMPLEX,
-                    pos=(int(x1)-20, int(y1)-30),
-                    font_scale=0.5,
-                    font_thickness=1,
-                    text_color=(0, 0, 0),
-                    text_color_bg=(255, 255, 255)
-                    )
-            frame_image = Image.fromarray(img)
-            
-        out_file.write_frame(np.array(frame_image))

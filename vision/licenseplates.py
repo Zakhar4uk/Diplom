@@ -7,8 +7,6 @@ Original file is located at
     https://colab.research.google.com/drive/1nM7sz7ACAFDnYI-Uh8Z_zKSgbaQBgf5p
 """
 
-from transformers import TrOCRProcessor, VisionEncoderDecoderModel
-from PIL import Image
 import yolov5
 
 # load model
@@ -20,34 +18,4 @@ model.iou = 0.45  # NMS IoU threshold
 model.agnostic = False  # NMS class-agnostic
 model.multi_label = False  # NMS multiple labels per box
 model.max_det = 1000  # maximum number of detections per image
-
-
-text_processor = TrOCRProcessor.from_pretrained('microsoft/trocr-base-stage1')
-text_model = VisionEncoderDecoderModel.from_pretrained('microsoft/trocr-base-stage1')
-
-def get_license_plates(image_path: str) -> dict:
-    # set image
-    # img = 
-    # inference with test time augmentation
-    results = model(image_path, augment=True)
-    return results
-
-def get_characters(image: Image) -> str:
-    plate = image
-
-    pixel_values = text_processor(images=plate, return_tensors="pt").pixel_values
-
-    generated_ids = text_model.generate(pixel_values)
-    generated_text = text_processor.batch_decode(generated_ids, skip_special_tokens=True)
-    return generated_text
-
-
-if __name__ == '__main__':
-    plates = get_license_plates('https://avatars.mds.yandex.net/i?id=d9a41c5b05e08e558ddf8d82d53d0cb3_l-5277189-images-thumbs&n=13')
-    preds = plates.pred[0]
-    boxes = preds[:, :4]
-    print(get_characters(Image.fromarray(plates.ims[0]).crop(boxes.numpy().tolist()[0])))
-
-
-
 
