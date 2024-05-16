@@ -24,12 +24,12 @@ def annotate_image(source, dest):
 
 
     frame_res = model(frame_image)
+    img = np.array(frame_image)
     n, _ = frame_res.pred[0].shape
     for i in range(n):
         # if len(i) > 0:
         x1, y1, x2, y2 = frame_res.pred[0][i, :4]
         draw.rectangle((x1, y1, x2, y2), outline=(255, 10, 0), width=1)
-        img = np.array(frame_image)
 
         gosnomer = ocr.ocr(np.array(frame_image.crop((int(x1), int(y1), int(x2), int(y2)))), cls=True)
 
@@ -77,12 +77,12 @@ def annotate_video(source, dest):
 
 
             frame_res = model(frame)
+            img = np.array(frame_image)
             n, _ = frame_res.pred[0].shape
             for i in range(n):
                 # if len(i) > 0:
                 x1, y1, x2, y2 = frame_res.pred[0][i, :4]
                 draw.rectangle((x1, y1, x2, y2), outline=(255, 10, 0), width=1)
-                img = np.array(frame_image)
 
                 gosnomer = ocr.ocr(np.array(frame_image.crop((int(x1), int(y1), int(x2), int(y2)))), cls=True)
 
@@ -109,7 +109,7 @@ def annotate_video(source, dest):
                         text_color=(0, 0, 0),
                         text_color_bg=(255, 255, 255)
                         )
-                frame_image = Image.fromarray(img)
+            frame_image = Image.fromarray(img)
                 
             out_file.write_frame(np.array(frame_image))
 
