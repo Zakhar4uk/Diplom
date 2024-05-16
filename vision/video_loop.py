@@ -11,10 +11,6 @@ ocr = PaddleOCR(use_angle_cls=True, lang='en')
 
 import re
 
-
-source = '/home/marat/Videos/На Машине по Санкт-Петербургу 4K.mp4'
-dest = '/home/marat/Videos/overley_yolo_paddle.mp4'
-
 def annotate_image(source, dest):
     frame_image = Image.open(source)
     draw = ImageDraw.Draw(frame_image)
