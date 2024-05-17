@@ -89,17 +89,19 @@ class LicensePlateFinder:
             #     gosnomer = '--------'
             # else:
             #     gosnomer = gosnomer.string
-            print(gosnomer)
-            self.draw_text(
-                frame,
-                text=gosnomer,
-                font=cv2.FONT_HERSHEY_SIMPLEX,
-                pos=(int(x1)-20, int(y1)-30),
-                font_scale=0.5,
-                font_thickness=1,
-                text_color=(0, 0, 0),
-                text_color_bg=(255, 255, 255)
-                )
+
+            if gosnomer != '':
+                print(gosnomer)
+                self.draw_text(
+                    frame,
+                    text=gosnomer,
+                    font=cv2.FONT_HERSHEY_SIMPLEX,
+                    pos=(int(x1)-20, int(y1)-30),
+                    font_scale=0.5,
+                    font_thickness=1,
+                    text_color=(0, 0, 0),
+                    text_color_bg=(255, 255, 255)
+                    )
         
         # results.orig_img = frame
         # results.orig_shape = frame.shape[:-1]
@@ -130,4 +132,4 @@ class LicensePlateFinder:
         return text_size
 
 if __name__ == '__main__':
-    LicensePlateFinder()('/home/marat/Videos/1.mp4', '/home/marat/Videos/1_annotated.mp4')
+    LicensePlateFinder()('/home/marat/Pictures/m666mm777.jpg', '/home/marat/Pictures/res.jpg')
