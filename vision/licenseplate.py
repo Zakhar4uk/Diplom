@@ -52,8 +52,8 @@ class LicensePlateFinder:
 
     def image_inference(self, source:Path, destination:Path) -> None:
         frame_image = Image.open(source)
-
-        pass
+        result = self.frame_inference(np.array(frame_image))
+        Image.fromarray(result).save(destination)
 
     def frame_inference(self, frame:np.array) -> np.array:
         frame_image = Image.fromarray(frame)
