@@ -44,6 +44,7 @@ class LicensePlateFinder:
         codec = iio.immeta(source, plugin="pyav")["codec"]
 
         with iio.imopen(destination, "w", plugin="pyav") as out_file:
+            # out_file.init_video_stream(codec='vp9', fps=fps)
             out_file.init_video_stream(codec=codec, fps=fps)
 
             for frame in iio.imiter(source, plugin="pyav"):
