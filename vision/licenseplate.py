@@ -14,10 +14,10 @@ class LicensePlateFinder:
     def __init__(self) -> None:
         self.ocr_model = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
         self.objects_model = YOLO('yolov8n.pt')
-        self.licenseplate_model = yolov5.load('keremberke/yolov5m-license-plate')
+        self.licenseplate_model = yolov5.load('keremberke/yolov5m-license-plate',)
         self.gosnome_reg_exp = '([АВЕКМНОРСТУХавекмнорстухABEKMHOPCTYXabekmhopctyx]\s*\d{3}\s*[АВЕКМНОРСТУХавекмнорстухABEKMHOPCTYXabekmhopctyx]{2}\s*\d{2,3})|([АВЕКМНОРСТУХавекмнорстухABEKMHOPCTYXabekmhopctyx]{2}\s*\d{3}\s*\d{2,3})'
 
-    def __call__(self, source:str, destination:str) -> None:
+    def __call__(self, source:str, destination:str, strict:bool=True) -> None:
         source = Path(source)
         destination = Path(destination)
 
@@ -41,7 +41,7 @@ class LicensePlateFinder:
 
     def video_inference(self, source:Path, destination:Path) -> None:
         fps = int(iio.immeta(source, plugin="pyav")["fps"])
-        codec = iio.immeta(source, plugin="pyav")["codec"]
+        codec = 'vp9'
 
         with iio.imopen(destination, "w", plugin="pyav") as out_file:
             # out_file.init_video_stream(codec='vp9', fps=fps)
@@ -68,7 +68,6 @@ class LicensePlateFinder:
 
         n, _ = frame_res.pred[0].shape
         for i in range(n):
-            # if len(i) > 0:
             x1, y1, x2, y2 = frame_res.pred[0][i, :4]
             draw.rectangle((x1, y1, x2, y2), outline=(255, 10, 0), width=1)
 
@@ -104,8 +103,6 @@ class LicensePlateFinder:
                     text_color_bg=(255, 255, 255)
                     )
         
-        # results.orig_img = frame
-        # results.orig_shape = frame.shape[:-1]
         frame = results.plot(img=frame)
         return frame
 
