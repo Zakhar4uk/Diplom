@@ -1,6 +1,5 @@
 import numpy as np
 import imageio.v3 as iio
-from licenseplates import model
 from PIL import Image, ImageDraw
 import cv2
 from ultralytics import YOLO
@@ -52,14 +51,19 @@ class LicensePlateFinder:
                 out_file.write_frame(frame_result)
 
     def image_inference(self, source:Path, destination:Path) -> None:
+        frame_image = Image.open(source)
+
         pass
 
     def frame_inference(self, frame:np.array) -> np.array:
         frame_image = Image.fromarray(frame)
         draw = ImageDraw.Draw(frame_image)
 
+        # Run batched inference on a list of images
+        results = self.objects_model(frame_image, imgsz=frame.shape[:-1])[0]  # return a list of Results objects
 
-        frame_res = model(frame_image)
+
+        frame_res = self.licenseplate_model(frame_image)
 
         n, _ = frame_res.pred[0].shape
         for i in range(n):
@@ -76,26 +80,30 @@ class LicensePlateFinder:
 
             gosnomer = gosnomer.replace(' ', '').upper()
 
-            gosnomer = self.extract_gosnomer(gosnomer)
+            # print(gosnomer)
 
-            if gosnomer != None:
-                gosnomer = gosnomer.string
-                self.draw_text(
-                    frame,
-                    text=gosnomer,
-                    font=cv2.FONT_HERSHEY_SIMPLEX,
-                    pos=(int(x1)-20, int(y1)-30),
-                    font_scale=0.5,
-                    font_thickness=1,
-                    text_color=(0, 0, 0),
-                    text_color_bg=(255, 255, 255)
-                    )
+            # gosnomer = self.extract_gosnomer(gosnomer)
+
+
+            # if gosnomer == None:
+            #     gosnomer = '--------'
+            # else:
+            #     gosnomer = gosnomer.string
+            print(gosnomer)
+            self.draw_text(
+                frame,
+                text=gosnomer,
+                font=cv2.FONT_HERSHEY_SIMPLEX,
+                pos=(int(x1)-20, int(y1)-30),
+                font_scale=0.5,
+                font_thickness=1,
+                text_color=(0, 0, 0),
+                text_color_bg=(255, 255, 255)
+                )
         
-        # Run batched inference on a list of images
-        results = self.objects_model(frame)[0]  # return a list of Results objects
-
-        frame = results.plot()
-                
+        # results.orig_img = frame
+        # results.orig_shape = frame.shape[:-1]
+        frame = results.plot(img=frame)
         return frame
 
     def extract_gosnomer(self, nomer: str) -> str:
